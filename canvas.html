@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+
+<Head>
+    <script src="./scripts/interpolation.js"></script>
+    <style>
+        /*для всіх тегів  DIV*/
+        div {
+            border-width: 1px;
+            border-style: solid;
+            border-color: red;
+        }
+
+        /*для  конкретного лемента з id="drawing-canwas" */
+        #drawing-canwas {
+            border-width: 2px;
+            border-style: solid;
+            border-color: green;
+        }
+
+        /* для всіх елементів   з  class = "number-input"` */
+        .number-input {
+            font-style: italic;
+            color: darkred;
+        }
+
+        .data-table input[type="number"] {
+            border-radius: 4px;
+            height: 32px;
+            width: 100%;
+        }
+
+        .data-table input[type="button"] {
+            border-radius: 8px;
+            height: 32px;
+            width: 100%;
+            margin: 6px;
+        }
+
+        .data-table input[type="button"]:hover {
+            color: darkblue;
+            font-weight: bold;
+        }
+
+        .container h1 {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: large;
+
+        }
+
+        table tr:nth-child(1) {
+            background-color: gray;
+        }
+
+        .button {
+            border-radius: 4px;
+            background-color: #f4511e;
+            border: none;
+            color: #FFFFFF;
+            text-align: center;
+            font-size: 16px;
+            padding: 16px;
+            width: 100%;
+            transition: all 0.5s;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .button span {
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+            transition: 0.5s;
+        }
+
+        .button span:after {
+            content: '\00bb';
+            position: absolute;
+            opacity: 0;
+            top: 0;
+            right: -20px;
+            transition: 0.5s;
+        }
+
+        .button:hover span {
+            padding-right: 25px;
+        }
+
+        .button:hover span:after {
+            opacity: 1;
+            right: 0;
+        }
+    </style>
+</Head>
+
+<body>
+    <h2>Drawing</h2>
+    <div class="container">
+        <div>
+            <h1> Кандва для малювання</h1>
+        </div>
+        <div>
+            <canvas id="drawing-canwas" width="820" height="480">
+
+            </canvas>
+        </div>
+    </div>
+    <br />
+    <table class="data-table">
+        <tr>
+            <td colspan="3"> Додати новий рядок</td>
+        </tr>
+        <tr>
+            <td><input type="number" id="textX" placeholder="X" class="number-input" /></td>
+            <td><input type="number" id="textY" placeholder="Y" class="number-input" /></td>
+            <td><input type="button" id="add" value="Додати" /></td>
+        </tr>
+        <tr>
+            <td colspan="3">Розразувати прогнозоване значення</td>
+        </tr>
+        <tr>
+            <td> Для Х:</td>
+            <td> <input type="text" id="nextX" placeholder="X*"></td>
+            <td>
+                <button class="button" id="calcNext"><span>Calc </span></button>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">Розраховане значення:</td>
+            <td><strong><span id="nextY"></span></strong></td>
+        </tr>
+
+    </table>
+    <h3>Введені значення</h3>
+    <ul id="table-data">
+
+    </ul>
+    <br>
+    <input type="button" value="показати на графіку" id="drawBtn" />
+    <br>
+    <a href="./index.html">На головну</a>
+    <script>
+        function drawFunction(context2D, minXPx, maxXPx, minYPx, maxYPx, scale, f) {
+            var border = 10;
+            var x0 = Math.floor((maxXpx + minXpx) / 2);
+            var y0 = Math.floor((maxYpx + minYpx) / 2);
+
+            var totalX = Math.floor((maxXpx - minXpx) / scale);
+            var totalY = Math.floor((maxYpx - minXpx) / scale);
+            var minX = -Math.floor(totalX / 2);
+            var maxX = Math.floor(totalX / 2);
+
+            var minY = -Math.floor(totalY / 2);
+            var maxY = Math.floor(totalY / 2);
+
+
+            var startPt = x0 + (minX * scale);
+            var endPt = x0 + (maxX * scale);
+            context2D.beginPath();
+            for (var ptX = startPt; ptX < endPt; ptX++) {
+                //перетворити точку екрану в координату Х
+                var x = (ptX - x0) / scale;
+                //розрахувати значення функції
+                var y = f(x);
+                if (y == null || isNaN(y) || y >= maxY || y <= minY) continue;
+                //перетворити значення функції в точку на канві
+                var ptY = y0 - y * scale;
+
+                context2D.lineTo(ptX, ptY);
+            }
+            context2D.stroke();
+        }
+
+        function drawUnitPoints(context2D, minXPx, maxXPx, minYPx, maxYPx, scale) {
+            var x0Px = Math.floor((minXPx + maxXPx) / 2);
+            var y0Px = Math.floor((minYPx + maxYPx) / 2);
+            var totalX = (maxXPx - minXPx) / scale;
+            var totalY = (maxYPx - minYPx) / scale;
+            var minX = -Math.floor(totalX / 2);
+            var maxX = Math.floor(totalX / 2);
+
+            var minY = -Math.floor(totalY / 2);
+            var maxY = Math.floor(totalY / 2);
+            var x = minX
+            while (x <= maxX) {
+                context2D.beginPath();
+                context2D.moveTo(x0Px - x * scale, y0Px - 3);
+                context2D.lineTo(x0Px - x * scale, y0Px + 3);
+                context2D.stroke();
+                x++;
+            }
+            var y = minY;
+            while (y <= maxY) {
+                context2D.beginPath();
+                context2D.moveTo(x0Px - 3, y0Px - y * scale);
+                context2D.lineTo(x0Px + 3, y0Px - y * scale);
+                context2D.stroke();
+                y++;
+            }
+        }
+        function drawCoordinateSystem(context2D, minX, maxX, minY, maxY, scale) {
+            context2D.strokeStyle = "#888888";
+            let midX = Math.floor((maxX + minX) / 2);
+            let midY = Math.floor((maxY + minY) / 2);
+            //пряма ОХ
+            context2D.beginPath();
+            context2D.moveTo(minX, midY);
+            context2D.lineTo(maxX, midY);
+            context2D.stroke();
+
+            //пряма ОY
+            context2D.beginPath();
+            context2D.moveTo(midX, minY);
+            context2D.lineTo(midX, maxY);
+            context2D.stroke();
+
+            //стрілочка на прямій ОХ
+            context2D.beginPath();
+            context2D.lineTo(maxX - 15, midY - 5);
+            context2D.moveTo(maxX, midY);
+            context2D.lineTo(maxX - 15, midY + 5);
+            context2D.stroke();
+
+
+            //стрілочка OY
+            context2D.beginPath();
+            context2D.moveTo(midX - 5, minY + 15);
+            context2D.lineTo(midX, minY);
+            context2D.lineTo(midX + 5, minY + 15);
+            context2D.stroke();
+            //засічки
+            drawUnitPoints(context2D, minX, maxX, minY, maxY, scale);
+        }
+
+        var canvas = document.getElementById("drawing-canwas");
+        var canvasWidth = 820;
+        var canvasHeight = 480;
+        var border = 5;
+        var scale = 24;
+
+        let minXpx = border * 2;
+        let maxXpx = canvasWidth - 2 * border;
+        let minYpx = border * 2;
+        let maxYpx = canvasHeight - 2 * border;
+
+        if (!canvas.getContext) {
+            throw new Error("Context intialization failed");
+        }
+        const ctx = canvas.getContext("2d");
+
+        //рамочка 5 пікселів від краю
+        ctx.strokeStyle = "#0000ff";
+        ctx.strokeRect(border, border, canvasWidth - border, canvasHeight - border);
+        //система координат
+        drawCoordinateSystem(ctx, minXpx, maxXpx, minYpx, maxYpx, scale)
+
+
+        //малюємо графік
+        ctx.strokeStyle = "#00ff00";
+        var f = (x) => 2 * Math.sin(x / 2) + 3;
+        //drawFunction(ctx, minXpx, maxXpx, minYpx, maxYpx, scale, f);
+
+        ctx.strokeStyle = "#10ffff";
+        var k1 = 2;
+        var k2 = -2;
+        var f2 = (x) => Math.pow((x + k1), 2) + k2
+
+        //drawFunction(ctx, minXpx, maxXpx, minYpx, maxYpx, scale, f2);
+
+        //https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Drawing_shapes
+
+        var entries = [];
+        var interpolation = null;
+
+        var addButton = document.getElementById("add");
+        addButton.onclick = () => {
+            //прочитати значення з текстових полів
+            var xEl = document.getElementById("textX");
+            var yEl = document.getElementById("textY");
+            var x = parseFloat(xEl.value);
+            var y = parseFloat(yEl.value);
+            //добавити значення в список в памяті 
+            entries.push(new Entry(x, y));
+            xEl.value = "";
+            yEl.value = "";
+
+            // додати значення в список на екрані 
+            var tableDataEl = document.getElementById("table-data");
+            var newItem = document.createElement("li");
+            newItem.innerHTML = "X = " + x + "; Y = " + y + ";";
+            tableDataEl.appendChild(newItem);
+        }
+        var calcNextButton = document.getElementById("calcNext");
+        calcNextButton.onclick = () => {
+            const nextXEl = document.getElementById("nextX");
+            const nextYEl = document.getElementById("nextY");
+            let x = parseFloat(nextXEl.value);
+            if (interpolation == null) {
+                interpolation = new Interpolation(entries);
+            }
+            const y = interpolation.getValue(x);
+            nextYEl.innerHTML = y;
+        }
+
+
+        var drawButton = document.getElementById("drawBtn");
+        drawButton.onclick = function () {
+            if (interpolation == null) {
+                interpolation = new Interpolation(entries);
+            }
+            var f = (x) => interpolation.getValue(x);
+            ctx.strokeStyle = "#ff0000";
+            drawFunction(ctx, minXpx, maxXpx, minYpx, maxYpx, scale, f);
+        }
+    </script>
+</body>
+
+</html>
